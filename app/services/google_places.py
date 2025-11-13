@@ -21,7 +21,7 @@ class GooglePlacesService:
             data = response.json()
 
         results = []
-        for place in data.get(results, []):
+        for place in data.get("results", []):
             results.append({
                 "name": place.get("name"),
                 "address": place.get("vicinity"),
