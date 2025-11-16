@@ -1,5 +1,6 @@
 import httpx
 from app.core.config import settings
+from app.schemas.event import EventSchema
 
 class TicketmasterService:
     BASE_URL = "https://app.ticketmaster.com/discovery/v2/events.json"
@@ -48,13 +49,13 @@ class TicketmasterService:
         for event in data.get("_embedded", {}).get("events", []):
             venue_info = event.get("_embedded", {}).get("venues", [{}])[0]
             city_name = venue_info.get("city", {}).get("name")
-            results.append({
-                "name": event.get("name"),
-                "date": event.get("dates", {}).get("start", {}).get("localDate"),
-                "time": event.get("dates", {}).get("start", {}).get("localTime"),
-                "venue": venue_info.get("name"),
-                "city": city_name,
-                "url": event.get("url"),
-            })
+            results.append(EventSchema(
+                name=event.get("name"),
+                date=event.get("dates", {}).get("start", {}).get("localDate"),
+                time=event.get("dates", {}).get("start", {}).get("localTime"),
+                venue=venue_info.get("name"),
+                city=city_name,
+                url=event.get("url")
+            ))
 
         return results

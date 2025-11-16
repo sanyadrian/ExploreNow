@@ -9,3 +9,4 @@ places_service = GooglePlacesService()
 async def get_places(lat: float = Query(...), lng: float = Query(...), radius: int = 2000):
     data = await places_service.get_places_by_location(lat, lng, radius)
     return {"results": data}
+

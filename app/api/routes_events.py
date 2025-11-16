@@ -38,3 +38,16 @@ async def get_ticketmaster_events(
         radius=radius
     )
     return {"results": data}
+
+@router.get("/sorted")
+async def get_ticketmaster_events_sorted(
+        lat: float | None = None,
+        lng: float | None = None,
+        keyword: str | None = None,
+):
+    data = await ticketmaster_service.get_events(
+        lat=lat, lng=lng, keyword=keyword
+    )
+
+    sorted_events = sorted(data, key=lambda event: (event.date or "9999-99-99", event.time or "99:99:99"))
+    return {"results": sorted_events}
