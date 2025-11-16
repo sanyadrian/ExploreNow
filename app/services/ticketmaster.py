@@ -1,6 +1,9 @@
 import httpx
+import json
 from app.core.config import settings
 from app.schemas.event import EventSchema
+from app.core.cache import redis_client
+
 
 class TicketmasterService:
     BASE_URL = "https://app.ticketmaster.com/discovery/v2/events.json"
@@ -14,11 +17,17 @@ class TicketmasterService:
         lng: float | None = None,
         city: str | None = None,
         keyword: str | None = None,
-        radius: int = 25,  # in miles
+        radius: int = 25,
         start_date: str | None = None,
         end_date: str | None = None,
         size: int = 20,
     ):
+        cache_key = f"tm:{lat}:{lng}:{city}:{keyword}:{radius}:{start_date}:{end_date}:{size}"
+        cached = await redis_client.get(cache_key)
+
+        if cached:
+            return [EventSchema(**item) for item in json.loads(cached)]
+
         params = {
             "apikey": self.api_key,
             "size": size,
@@ -33,7 +42,6 @@ class TicketmasterService:
 
         if keyword:
             params["keyword"] = keyword
-
         if start_date:
             params["startDateTime"] = start_date
         if end_date:
@@ -41,14 +49,13 @@ class TicketmasterService:
 
         async with httpx.AsyncClient() as client:
             response = await client.get(self.BASE_URL, params=params)
-            print("Final URL:", response.url)
-            response.raise_for_status()
             data = response.json()
 
         results = []
         for event in data.get("_embedded", {}).get("events", []):
             venue_info = event.get("_embedded", {}).get("venues", [{}])[0]
             city_name = venue_info.get("city", {}).get("name")
+
             results.append(EventSchema(
                 name=event.get("name"),
                 date=event.get("dates", {}).get("start", {}).get("localDate"),
@@ -57,5 +64,11 @@ class TicketmasterService:
                 city=city_name,
                 url=event.get("url")
             ))
+
+        await redis_client.setex(
+            cache_key,
+            600,
+            json.dumps([e.model_dump() for e in results])
+        )
 
         return results
