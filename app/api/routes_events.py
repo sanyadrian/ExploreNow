@@ -1,10 +1,40 @@
 from fastapi import APIRouter, Query
-from app.services.eventbrite import EventbriteService
+from app.services.ticketmaster import TicketmasterService
 
 router = APIRouter()
-eventbrite_service = EventbriteService()
+ticketmaster_service = TicketmasterService()
 
-@router.get("/eventbrite")
-async def get_eventbrite_events(city: str = Query(...), keyword: str | None = None):
-    data = await eventbrite_service.get_events_by_city(city, keyword)
+
+@router.get("/")
+async def get_all_events(
+    lat: float = Query(...),
+    lng: float = Query(...),
+    keyword: str | None = None,
+    radius: int = 25
+):
+
+    data = await ticketmaster_service.get_events(
+        lat=lat,
+        lng=lng,
+        keyword=keyword,
+        radius=radius
+    )
+    return {"results": data}
+
+
+@router.get("/ticketmaster")
+async def get_ticketmaster_events(
+    lat: float | None = None,
+    lng: float | None = None,
+    city: str | None = None,
+    keyword: str | None = None,
+    radius: int = 25
+):
+    data = await ticketmaster_service.get_events(
+        lat=lat,
+        lng=lng,
+        city=city,
+        keyword=keyword,
+        radius=radius
+    )
     return {"results": data}
