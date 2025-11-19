@@ -54,6 +54,9 @@ class TicketmasterService:
         results = []
         for event in data.get("_embedded", {}).get("events", []):
             venue_info = event.get("_embedded", {}).get("venues", [{}])[0]
+            location_info = venue_info.get("location", {})
+            venue_lat = float(location_info.get("latitude")) if location_info.get("latitude") else None
+            venue_lng = float(location_info.get("longitude")) if location_info.get("longitude") else Non
             city_name = venue_info.get("city", {}).get("name")
 
             results.append(EventSchema(
@@ -62,7 +65,9 @@ class TicketmasterService:
                 time=event.get("dates", {}).get("start", {}).get("localTime"),
                 venue=venue_info.get("name"),
                 city=city_name,
-                url=event.get("url")
+                url=event.get("url"),
+                venue_latitude = venue_lat,
+                venue_longitude = venue_lng
             ))
 
         await redis_client.setex(

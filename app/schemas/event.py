@@ -8,4 +8,6 @@ class EventSchema(BaseModel):
     venue: Optional[str]
     city: Optional[str]
     url: Optional[str]
-    distance_km: Optional[float] = None   # for /nearby sorting
+    venue_latitude: Optional[float] = None
+    venue_longitude: Optional[float] = None
+    distance_km: Optional[float] = None

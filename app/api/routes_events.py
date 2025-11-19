@@ -63,14 +63,9 @@ async def get_nearby_events(
     events = await ticketmaster_service.get_events(lat=lat, lng=lng, keyword=keyword)
 
     for e in events:
-        if e.city:
-            venue_data = e.__dict__
-            venue_lat = venue_data.get("latitude")
-            venue_lng = venue_data.get("longitude")
-
-            if venue_lat and venue_lng:
-                e.distance_km = haversine(lat, lng, venue_lat, venue_lng)
+        if e.venue_latitude and e.venue_longitude:
+            e.distance_km = haversine(lat, lng, e.venue_latitude, e.venue_longitude)
 
     sorted_events = sorted(events, key=lambda x: x.distance_km or 999999)
 
-    return {"results": sorted_events}
+    return {"results": [e.model_dump() for e in sorted_events]}
